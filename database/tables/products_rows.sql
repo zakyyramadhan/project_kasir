@@ -1,0 +1,1 @@
+INSERT INTO "public"."products" ("id", "sku", "name", "sale_price", "cost_price", "stock", "is_active", "created_at", "updated_at") VALUES ('9c65b559-158b-4fd6-ba82-2de8561a2762', 'IND001', 'Indomie Goreng', '3500', '2500', 1, true, '2026-06-25 04:35:02.762385+00', '2026-06-25 04:35:02.762385+00');
