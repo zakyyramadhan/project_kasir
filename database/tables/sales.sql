@@ -1,17 +1,16 @@
-create table public.sales (
-  id uuid not null default gen_random_uuid (),
-  queue_no integer null,
-  sale_date date not null default CURRENT_DATE,
-  invoice_no text null,
-  total numeric not null default '0'::numeric,
-  payment_method text not null default 'Cash'::text,
-  created_at timestamp with time zone not null default now(),
-  updated_at timestamp with time zone not null default now(),
-  constraint sales_pkey primary key (id),
-  constraint sales_invoice_no_key unique (invoice_no),
-  constraint sales_invoice_no_unique unique (invoice_no),
-  constraint sales_sale_date_queue_unique unique (sale_date, queue_no)
-) TABLESPACE pg_default;
-
-create trigger before_insert_sales BEFORE INSERT on sales for EACH row
-execute FUNCTION generate_sales_invoice ();
+CREATE TABLE public.sales (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  queue_no integer NOT NULL,
+  sale_date date NOT NULL DEFAULT CURRENT_DATE,
+  invoice_no text NOT NULL,
+  total numeric(12,2) NOT NULL DEFAULT 0,
+  payment_method text NOT NULL DEFAULT 'Cash',
+  status text NOT NULL DEFAULT 'PAID',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT sales_invoice_no_unique UNIQUE(invoice_no),
+  CONSTRAINT sales_sale_date_queue_unique UNIQUE(sale_date,queue_no),
+  CONSTRAINT sales_total_check CHECK(total>=0),
+  CONSTRAINT sales_payment_method_check CHECK(payment_method IN ('Cash','QRIS','Debit','Transfer')),
+  CONSTRAINT sales_status_check CHECK(status IN ('PAID','VOID','REFUND'))
+);

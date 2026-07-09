@@ -1,10 +1,13 @@
-# Current State
+# CURRENT STATE
+Version: v0.3.0.2
 
-Version: v0.2.1
+Completed
+- Database schema
+- Queue Engine
+- Invoice Generator
+- Sales Finalization
+- create_sale() Skeleton
+- Request Validation
 
-Completed:
-- queue_counters
-- fn_next_queue()
-
-Current Focus:
-- Invoice Helper Function
+Next
+- Product Validation

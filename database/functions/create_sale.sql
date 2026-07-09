@@ -1,0 +1,6 @@
+-- v0.3.0.2 Skeleton + Request Validation
+-- Receives: create_sale(p_payload jsonb)
+-- Current features:
+-- * payment validation
+-- * empty cart validation
+-- * qty validation
