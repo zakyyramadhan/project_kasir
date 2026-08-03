@@ -142,6 +142,14 @@
 <script>
 const SUPABASE_URL = 'https://okkwtpscikwiumoophsa.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ra3d0cHNjaWt3aXVtb29waHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNTM5ODQsImV4cCI6MjA5NzkyOTk4NH0.OZrvoeTT4XAtp6eubzSdzVKL2lpN2o6sp0-4vgT840I';
+
+// Guard: supabase-js must have loaded from CDN, else show a clear error.
+if (typeof supabase === 'undefined' || typeof supabase.createClient !== 'function') {
+  document.querySelector('.auth-error').textContent =
+    'Gagal memuat pustaka supabase-js (CDN tidak terjangkau). Periksa koneksi internet Anda.';
+  document.getElementById('loginBtn').disabled = true;
+  throw new Error('supabase-js library failed to load from CDN');
+}
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let products = [];
@@ -152,7 +160,7 @@ const toast = (m,err)=>{const t=document.getElementById('toast');t.textContent=m
 
 /* ---------- AUTH ---------- */
 async function checkSession(){
-  const {data:{session}} = await supabase.auth.getSession();
+  const {data:{session}} = await sb.auth.getSession();
   if(session){ showApp(session.user.email); } else { showAuth(); }
 }
 async function login(){
@@ -161,11 +169,11 @@ async function login(){
   const err=document.getElementById('authError');
   err.textContent='';
   if(!email||!pass){err.textContent='Email & password wajib diisi';return;}
-  const {data,error}=await supabase.auth.signInWithPassword({email,password:pass});
+  const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
   if(error){err.textContent=error.message;return;}
   showApp(email);
 }
-function logout(){ supabase.auth.signOut(); showAuth(); }
+function logout(){ sb.auth.signOut(); showAuth(); }
 function showApp(email){document.getElementById('auth-screen').style.display='none';document.getElementById('app-view').style.display='block';document.getElementById('adminEmail').textContent=email;loadProducts();}
 function showAuth(){document.getElementById('auth-screen').style.display='grid';document.getElementById('app-view').style.display='none';}
 
@@ -179,7 +187,7 @@ document.getElementById('q').addEventListener('input',render);
 function emojiOf(n){n=(n||'').toLowerCase();if(n.includes('seblak'))return '🌶️';if(n.includes('mie')||n.includes('indomie'))return '🍜';if(n.includes('teh')||n.includes('es')||n.includes('jus'))return '🧋';if(n.includes('cilok'))return '🍢';if(n.includes('ceker'))return '🍗';if(n.includes('keju'))return '🧀';return '🍽️';}
 
 async function loadProducts(){
-  const {data,error}=await supabase.from('products').select('*').order('created_at');
+  const {data,error}=await sb.from('products').select('*').order('created_at');
   if(error){toast('Gagal muat: '+error.message,true);return;}
   products=data;
   render();
@@ -241,20 +249,20 @@ async function saveProduct(){
     is_active:document.getElementById('fActive').checked
   };
   let error;
-  if(editId){ ({error}=await supabase.from('products').update(rec).eq('id',editId)); }
-  else{ ({error}=await supabase.from('products').insert(rec)); }
+  if(editId){ ({error}=await sb.from('products').update(rec).eq('id',editId)); }
+  else{ ({error}=await sb.from('products').insert(rec)); }
   if(error){toast('Gagal: '+error.message,true);return;}
   toast('Tersimpan ✓');closeModal();loadProducts();
 }
 async function toggleActive(id){
   const p=products.find(x=>x.id===id);
-  const {error}=await supabase.from('products').update({is_active:!p.is_active}).eq('id',id);
+  const {error}=await sb.from('products').update({is_active:!p.is_active}).eq('id',id);
   if(error){toast('Gagal: '+error.message,true);return;}
   loadProducts();
 }
 async function removeProduct(id){
   if(!confirm('Hapus produk ini?'))return;
-  const {error}=await supabase.from('products').delete().eq('id',id);
+  const {error}=await sb.from('products').delete().eq('id',id);
   if(error){toast('Gagal: '+error.message,true);return;}
   toast('Terhapus');loadProducts();
 }
