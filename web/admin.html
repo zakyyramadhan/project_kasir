@@ -142,7 +142,7 @@
 <script>
 const SUPABASE_URL = 'https://okkwtpscikwiumoophsa.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ra3d0cHNjaWt3aXVtb29waHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNTM5ODQsImV4cCI6MjA5NzkyOTk4NH0.OZrvoeTT4XAtp6eubzSdzVKL2lpN2o6sp0-4vgT840I';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let products = [];
 let editId = null;
