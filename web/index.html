@@ -6,96 +6,90 @@
 <title>Kasir Seblak — POS</title>
 <style>
   :root{
-    --bg:#0e0d0b; --panel:#16140f; --panel2:#1d1a14; --line:#2a251c;
-    --txt:#f4efe6; --muted:#9a907d;
-    --accent:#ff5a1f; --accent2:#ffb347; --hot:#ff2d1a; --green:#4ade80;
-    --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.45); --maxw:1440px;
+    --bg:#f6f4f0; --panel:#ffffff; --panel2:#f1eee6; --line:#e7e1d5;
+    --txt:#221c12; --muted:#8b8271;
+    --accent:#e8590c; --accent2:#ffb347; --hot:#d9260c; --green:#16a34a;
+    --radius:16px; --shadow:0 10px 34px rgba(34,22,18,.10); --maxw:1440px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
   body{
     background:var(--bg); color:var(--txt); font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-    background-image:
-      radial-gradient(1200px 500px at 85% -5%, rgba(255,90,26,.08), transparent 60%),
-      radial-gradient(900px 400px at -10% 110%, rgba(255,74,26,.06), transparent 60%);
+    background-image:radial-gradient(1000px 400px at 90% -10%, rgba(232,89,12,.06), transparent 60%);
     background-attachment:fixed;
   }
-  .wrap{max-width:var(--maxw);margin:0 auto;height:100vh;display:grid;grid-template-rows:auto 1fr}
-  header{
-    display:flex;align-items:center;justify-content:space-between;padding:16px 26px;
-    border-bottom:1px solid var(--line);background:rgba(14,13,11,.8);backdrop-filter:blur(10px);
-  }
+  header{display:flex;align-items:center;justify-content:space-between;padding:14px 26px;
+    border-bottom:1px solid var(--line);background:rgba(255,255,255,.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:20}
   .brand{display:flex;align-items:center;gap:12px}
-  .logo{width:42px;height:42px;border-radius:12px;flex:none;
-    background:linear-gradient(135deg,var(--accent2),var(--accent));display:grid;place-items:center;
-    font-size:22px;box-shadow:0 4px 16px rgba(255,90,26,.4)}
-  .brand h1{font-size:20px;font-weight:700}
-  .brand small{display:block;color:var(--muted);font-size:12px}
-  .statusbar{display:flex;align-items:center;gap:20px}
-  .chip{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;
-    background:var(--panel2);border:1px solid var(--line);font-size:13px;color:var(--muted)}
+  .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:grid;place-items:center;font-size:22px;box-shadow:0 4px 16px rgba(232,89,12,.28)}
+  .brand h1{font-size:20px;font-weight:800;letter-spacing:.2px}
+  .brand small{display:block;color:var(--muted);font-size:12px;font-weight:400}
+  .statusbar{display:flex;align-items:center;gap:14px}
+  .chip{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:13px;color:var(--muted)}
   .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
   .dot.off{background:var(--muted);box-shadow:none}
-  main{display:grid;grid-template-columns:1fr 420px;min-height:0;height:calc(100vh - 75px)}
-  @media(max-width:980px){main{grid-template-columns:1fr;grid-template-rows:1fr auto;overflow:auto}
-    .cart{max-height:55vh;border-top:1px solid var(--line);border-left:none!important}}
+  .gear{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:18px;cursor:pointer;display:none;transition:.15s}
+  .gear:hover{color:var(--accent);border-color:var(--accent)}
+  .gear.show{display:grid;place-items:center}
+  main{display:grid;grid-template-columns:1fr 420px;min-height:0;height:calc(100vh - 71px)}
+  @media(max-width:980px){main{grid-template-columns:1fr;grid-template-rows:auto auto;overflow:auto}.cart{max-height:54vh;border-top:1px solid var(--line);border-left:none!important}}
   .catalog{padding:20px 26px;overflow-y:auto;min-height:0}
   .catalog-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
-  .catalog-head h2{font-size:15px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1.5px}
-  .search{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:260px}
+  .catalog-head h2{font-size:15px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1.5px}
+  .search{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:260px;box-shadow:0 1px 2px rgba(0,0,0,.02)}
   .search input{background:none;border:none;outline:none;color:var(--txt);width:100%;font-size:14px}
   .search input::placeholder{color:var(--muted)}
   .cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-  .cat{border:1px solid var(--line);background:var(--panel2);color:var(--muted);padding:8px 16px;border-radius:999px;font-size:13px;cursor:pointer;transition:.15s}
-  .cat.active{background:var(--accent2);border-color:var(--accent2);color:#1a0f00;font-weight:600}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s;position:relative;display:flex;flex-direction:column}
-  .card:hover{transform:translateY(-4px);border-color:var(--accent2);box-shadow:var(--shadow)}
-  .card .thumb{height:110px;display:grid;place-items:center;font-size:46px;background:linear-gradient(160deg,#241c12,#1a140c)}
+  .cat{border:1px solid var(--line);background:var(--panel);color:var(--muted);padding:8px 16px;border-radius:999px;font-size:13px;cursor:pointer;transition:.15s;font-weight:500}
+  .cat.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;box-shadow:0 4px 14px rgba(232,89,12,.25)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s;position:relative;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(0,0,0,.02)}
+  .card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:var(--shadow)}
+  .card .thumb{height:110px;display:grid;place-items:center;font-size:46px;background:linear-gradient(160deg,#fdf6ec,#f6eddd)}
   .card .body{padding:13px;display:flex;flex-direction:column;gap:6px}
-  .card .name{font-size:14px;font-weight:600;line-height:1.25}
+  .card .name{font-size:14px;font-weight:700;line-height:1.25}
   .card .meta{display:flex;justify-content:space-between;align-items:center}
-  .card .price{font-size:15px;font-weight:700;color:var(--accent2)}
+  .card .price{font-size:15px;font-weight:800;color:var(--accent)}
   .card .stock{font-size:11px;color:var(--muted)}
-  .card .stock.low{color:var(--accent)}
-  .card .badge{padding:3px 9px;border-radius:999px;font-size:10px;position:absolute;top:10px;right:10px;background:rgba(0,0,0,.55);color:var(--txt);border:1px solid var(--line)}
+  .card .stock.low{color:var(--hot);font-weight:600}
+  .card .badge{padding:3px 9px;border-radius:999px;font-size:10px;position:absolute;top:10px;right:10px;background:rgba(217,38,12,.9);color:#fff}
   .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 0}
   .cart{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
   .cart-head{padding:18px 22px;border-bottom:1px solid var(--line)}
   .cart-head .row{display:flex;justify-content:space-between;align-items:center}
-  .cart-head h2{font-size:16px}
+  .cart-head h2{font-size:16px;font-weight:800}
   .queue-chip{font-size:12px;color:var(--muted)}
-  .queue-chip b{color:var(--accent2)}
+  .queue-chip b{color:var(--accent)}
   #cartList{flex:1;overflow-y:auto;min-height:0}
   #cartListInner{padding:4px 22px}
   .cline{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
-  .cline .cname{font-size:14px;font-weight:500}
+  .cline .cname{font-size:14px;font-weight:600}
   .cline .cprice{font-size:11px;color:var(--muted)}
   .cline .cc{flex:1;min-width:0}
   .qty-ctl{display:flex;align-items:center;gap:2px;background:var(--panel2);border-radius:9px;border:1px solid var(--line)}
   .qty-ctl button{width:28px;height:30px;background:none;border:none;color:var(--txt);font-size:16px;cursor:pointer}
-  .qty-ctl span{min-width:26px;text-align:center;font-size:14px;font-weight:600}
-  .cline .subtotal{width:74px;text-align:right;font-weight:700;font-size:14px}
+  .qty-ctl span{min-width:26px;text-align:center;font-size:14px;font-weight:700}
+  .cline .subtotal{width:74px;text-align:right;font-weight:800;font-size:14px}
   .cline .del{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;padding:4px}
-  .cline .del:hover{color:var(--accent)}
+  .cline .del:hover{color:var(--hot)}
   .cart-empty{text-align:center;color:var(--muted);padding:46px 0;font-size:14px}
   .cart-foot{padding:18px 22px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
   .sum-row{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
   .sum-row.total{font-size:22px;font-weight:800;color:var(--txt);align-items:baseline}
-  .sum-row.total .val{color:var(--accent2)}
-  .pay{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#1a0f00;transition:.15s;box-shadow:0 6px 20px rgba(255,90,26,.35)}
-  .pay:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(255,90,26,.45)}
+  .sum-row.total .val{color:var(--accent)}
+  .pay{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;transition:.15s;box-shadow:0 6px 20px rgba(232,89,12,.28)}
+  .pay:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(232,89,12,.35)}
   .pay:disabled{opacity:.5;cursor:not-allowed;transform:none}
   .pmt{display:flex;gap:8px}
   .pmt label{flex:1;text-align:center;padding:9px;border:1px solid var(--line);border-radius:10px;font-size:12px;color:var(--muted);cursor:pointer;background:var(--panel2)}
   .pmt input{display:none}
-  .pmt input:checked+label{background:var(--accent2);color:#1a0f00;border-color:var(--accent2);font-weight:600}
-  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);opacity:0;background:#2b1a10;border:1px solid var(--accent2);color:var(--txt);padding:13px 20px;border-radius:12px;font-size:14px;transition:.3s;z-index:99;box-shadow:var(--shadow)}
+  .pmt input:checked+label{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);opacity:0;background:#3a2a18;border:1px solid var(--accent2);color:#fff;padding:13px 20px;border-radius:12px;font-size:14px;transition:.3s;z-index:99;box-shadow:var(--shadow)}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  #toast.err{border-color:var(--accent)}
-  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:100;backdrop-filter:blur(3px)}
+  #toast.err{border-color:var(--hot)}
+  .modal-bg{position:fixed;inset:0;background:rgba(30,20,10,.5);display:none;place-items:center;z-index:100;backdrop-filter:blur(3px)}
   .modal-bg.show{display:grid}
-  .receipt{width:340px;background:#fff;color:#222;border-radius:16px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .receipt{width:340px;background:#fff;color:#222;border-radius:16px;padding:26px;box-shadow:0 20px 60px rgba(34,22,18,.3)}
   .receipt h3{text-align:center;font-size:18px;margin-bottom:2px}
   .receipt .sub{text-align:center;color:#777;font-size:12px;margin-bottom:16px}
   .receipt .l{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
@@ -118,6 +112,7 @@
   <div class="statusbar">
     <div class="chip"><span class="dot"></span><span id="dbStatus">Menyambung DB…</span></div>
     <div class="chip">🕒 <span id="clock">--:--</span></div>
+    <button class="gear" id="gearBtn" title="Admin" onclick="location.href='admin.html'">⚙️</button>
   </div>
 </header>
 
@@ -158,14 +153,16 @@
   <div class="receipt" id="receiptModal"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= CONFIG ================= */
 const SUPABASE_URL = 'https://okkwtpscikwiumoophsa.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ra3d0cHNjaWt3aXVtb29waHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNTM5ODQsImV4cCI6MjA5NzkyOTk4NH0.OZrvoeTT4XAtp6eubzSdzVKL2lpN2o6sp0-4vgT840I';
+const ADMIN_USER_ID = '4f3040fd-d930-4e84-b578-e798dcf68a7a'; // gear shown only to this user
 
 /* ================= STATE ================= */
 let products = [];
-let cart = {}; // sku -> {sku,name,price,qty}
+let cart = {}; // keyed by sku
 let activeCat = 'Semua';
 let categories = ['Semua'];
 let paymentMethod = 'Cash';
@@ -182,8 +179,26 @@ const DEMO = [
 ];
 const fmt = n => 'Rp ' + Number(n).toLocaleString('id-ID');
 
+/* ================= ADMIN GATE (gear visibility) ================= */
+function setupAdminGate(){
+  if (typeof supabase === 'undefined' || typeof supabase.createClient !== 'function') return; // CDN not loaded -> hide gear
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  sb.auth.getSession().then(({data:{session}})=>{
+    if (session && session.user && session.user.id === ADMIN_USER_ID) {
+      document.getElementById('gearBtn').classList.add('show');
+    }
+  }).catch(()=>{});
+}
+
 /* ================= DB LOAD ================= */
 async function loadProducts(){
+  if (typeof supabase === 'undefined' || typeof supabase.createClient !== 'function') {
+    products = DEMO.map(p=>({...p, id:p.sku}));
+    setStatus('off','Mode Demo · offline');
+    buildCategories(); renderCats(); renderGrid();
+    return;
+  }
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
   try{
     const r = await fetch(`${SUPABASE_URL}/rest/v1/products?select=id,sku,name,sale_price,stock,is_active&is_active=eq.true&order=created_at`,{
       headers:{apikey:SUPABASE_ANON, Authorization:'Bearer '+SUPABASE_ANON}
@@ -219,7 +234,7 @@ function buildCategories(){
 /* ================= RENDER ================= */
 function renderCats(){
   document.getElementById('cats').innerHTML = categories.map(c=>
-    `<div class="cat ${c===activeCat?'active':''}" onclick="setCat('${c.replace(/'/g,"\\'")}')">${c}</div>`).join('');
+    `<div class="cat ${c===activeCat?'active':''}" onclick="setCat('${c.replace(/'/g,'')}')">${c}</div>`).join('');
 }
 function setCat(c){activeCat=c;renderCats();renderGrid();}
 
@@ -233,7 +248,7 @@ function renderGrid(){
   });
   el.innerHTML = list.length ? list.map(p=>{
     const low = p.stock<=5;
-    return `<div class="card" onclick="addToCart('${p.sku.replace(/'/g,"")}')">
+    return `<div class="card" onclick="addToCart('${p.sku.replace(/'/g,'')}')">
       <div class="thumb">${p.emoji}</div>
       ${low?`<span class="badge">Sisa ${p.stock}</span>`:''}
       <div class="body">
@@ -285,7 +300,6 @@ function adjust(sku,d){
   renderCart();
 }
 function delLine(sku){ delete cart[sku]; renderCart(); }
-function clearCart(){ cart={}; renderCart(); }
 
 /* ================= INFRA ================= */
 function setStatus(mode,txt){
@@ -311,11 +325,10 @@ document.querySelectorAll('.pmt input').forEach(i=>i.addEventListener('change',e
 document.addEventListener('click',e=>{ if(e.target.classList.contains('modal-bg')) closeReceipt(); });
 
 function showReceipt(total){
-  const inv = new Date().toISOString().slice(0,10).replace(/-/g,'');
   document.getElementById('modalBg').classList.add('show');
   document.getElementById('receiptModal').innerHTML = `
     <h3>🌶️ Kasir Seblak</h3>
-    <div class="sub">Struk INV-${inv}-001 · ${new Date().toLocaleTimeString('id-ID')}</div>
+    <div class="sub">Struk • ${new Date().toLocaleString('id-ID')}</div>
     ${Object.values(cart).map(it=>`<div class="item"><span>${it.qty}x ${it.name}</span><span>${fmt(it.qty*it.price)}</span></div>`).join('')}
     <div class="line"></div>
     <div class="l"><span>Subtotal</span><span>${fmt(total)}</span></div>
@@ -325,6 +338,7 @@ function showReceipt(total){
 }
 function closeReceipt(){document.getElementById('modalBg').classList.remove('show');document.getElementById('receiptModal').innerHTML='';}
 
+setupAdminGate();
 loadProducts().catch(()=>{});
 </script>
 </body>
