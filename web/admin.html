@@ -41,6 +41,16 @@
 
   /* App (admin) view */
   #app-view{display:none}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:0}
+  .tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:14px;font-weight:600;padding:10px 16px;cursor:pointer;transition:.15s}
+  .tab:hover{color:var(--txt)}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+  .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .stat b{font-size:18px;font-weight:800}
+  .table-wrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:auto}
+  .table-wrap table{border:none}
   .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
   .toolbar h2{font-size:16px;color:var(--muted);font-weight:600;margin-right:auto}
   .search{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 13px}
@@ -104,18 +114,49 @@
   </header>
 
   <div class="wrap">
-    <div class="toolbar">
-      <h2>Menu Produk</h2>
-      <div class="search">🔍<input id="q" placeholder="Cari produk…"></div>
-      <button class="btn ghost" onclick="openUserModal()">👥 Tambah User</button>
-      <button class="btn primary" onclick="openModal()">+ Tambah Produk</button>
+    <div class="tabs">
+      <button class="tab active" id="tabProducts" onclick="switchTab('products')">🛍️ Produk</button>
+      <button class="tab" id="tabHistory" onclick="switchTab('history')">📊 Riwayat Penjualan</button>
     </div>
-    <table>
-      <thead><tr>
-        <th>Emoji</th><th>Nama</th><th>SKU</th><th>Harga</th><th>Modal</th><th>Stock</th><th>Status</th><th>Aksi</th>
-      </tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
+
+    <!-- PRODUCTS PANEL -->
+    <div id="panelProducts">
+      <div class="toolbar">
+        <h2>Menu Produk</h2>
+        <div class="search">🔍<input id="q" placeholder="Cari produk…"></div>
+        <button class="btn ghost" onclick="openUserModal()">👥 Tambah User</button>
+        <button class="btn primary" onclick="openModal()">+ Tambah Produk</button>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Emoji</th><th>Nama</th><th>SKU</th><th>Harga</th><th>Modal</th><th>Stock</th><th>Status</th><th>Aksi</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- SALES HISTORY PANEL -->
+    <div id="panelHistory" style="display:none">
+      <div class="toolbar">
+        <h2>Riwayat Penjualan</h2>
+        <div class="search">📅<input id="dateFilter" type="date"></div>
+        <button class="btn ghost" onclick="loadHistory()">↻ Muat</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><span>Penjualan</span><b id="statCount">0</b></div>
+        <div class="stat"><span>Revenue</span><b id="statRevenue">Rp 0</b></div>
+        <div class="stat"><span>Item Terjual</span><b id="statItems">0</b></div>
+        <div class="stat"><span>Estimasi Profit</span><b id="statProfit" style="color:var(--green)">Rp 0</b></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Invoice</th><th>Antri</th><th>Waktu</th><th>Metode</th><th>Jumlah Item</th><th>Total</th>
+          </tr></thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -329,6 +370,55 @@ async function saveUser(){
 }
 document.getElementById('userModalBg').addEventListener('click',e=>{if(e.target===e.currentTarget)closeUserModal();});
 document.getElementById('saveUserBtn').addEventListener('click',saveUser);
+
+/* ---------- SALES HISTORY / DAILY REPORT ---------- */
+function switchTab(t){
+  const p = t==='products';
+  document.getElementById('panelProducts').style.display = p?'block':'none';
+  document.getElementById('panelHistory').style.display = p?'none':'block';
+  document.getElementById('tabProducts').classList.toggle('active',p);
+  document.getElementById('tabHistory').classList.toggle('active',!p);
+  if(!p) loadHistory();
+}
+async function loadHistory(){
+  const df=document.getElementById('dateFilter');
+  if(!df.value) df.value = new Date().toISOString().slice(0,10);
+  const date=df.value;
+  const {data:rows,error}=await sb.from('sales')
+    .select('id,invoice_no,queue_no,created_at,total,payment_method,status,sale_items(product_id,qty,price,products(cost_price))')
+    .eq('sale_date',date).order('queue_no',{ascending:true});
+  if(error){toast('Gagal muat riwayat: '+error.message,true);return;}
+  const tb=document.getElementById('histBody');
+  if(!rows||!rows.length){
+    tb.innerHTML='<tr><td colspan="6" class="empty">Tidak ada penjualan pada tanggal ini</td></tr>';
+    document.getElementById('statCount').textContent='0';
+    document.getElementById('statRevenue').textContent='Rp 0';
+    document.getElementById('statItems').textContent='0';
+    document.getElementById('statProfit').textContent='Rp 0';
+    return;
+  }
+  let rev=0, items=0, profit=0;
+  tb.innerHTML=rows.map(s=>{
+    rev += +s.total;
+    const it = s.sale_items||[];
+    const cnt = it.reduce((a,i)=>a+i.qty,0);
+    items += cnt;
+    profit += it.reduce((a,i)=>a + (i.qty*(+i.price - +(i.products&&i.products.cost_price||0))),0);
+    return `<tr>
+      <td style="font-weight:700">${s.invoice_no}</td>
+      <td>#${s.queue_no}</td>
+      <td>${new Date(s.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${s.payment_method}</td>
+      <td>${cnt} item</td>
+      <td class="money">${fmt(s.total)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('statCount').textContent = rows.length;
+  document.getElementById('statRevenue').textContent = fmt(rev);
+  document.getElementById('statItems').textContent = items;
+  document.getElementById('statProfit').textContent = fmt(profit);
+}
+document.getElementById('dateFilter').addEventListener('change',loadHistory);
 
 checkSession();
 </script>
