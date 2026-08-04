@@ -290,7 +290,7 @@ function addToCart(sku){
   const p = products.find(x=>x.sku===sku); if(!p) return;
   const have = cart[sku]?cart[sku].qty:0;
   if(have+1 > p.stock) return toast('Stock '+p.name+' habis', true);
-  cart[sku] = {name:p.name, price:p.price, qty: have+1};
+  cart[sku] = {id:p.id, name:p.name, price:p.price, qty: have+1};
   renderCart();
 }
 function adjust(sku,d){
@@ -315,20 +315,39 @@ function clock(){document.getElementById('clock').textContent=new Date().toLocal
 setInterval(clock,1000);clock();
 
 document.getElementById('q').addEventListener('input',renderGrid);
-document.getElementById('payBtn').addEventListener('click',()=>{
+document.getElementById('payBtn').addEventListener('click', async ()=>{
+  const items = Object.values(cart).map(it=>({product_id:it.id, qty:it.qty}));
+  if(!items.length) return;
+  const btn=document.getElementById('payBtn');
+  btn.disabled=true; btn.textContent='Memproses…';
+  let result;
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_sale`,{
+      method:'POST',
+      headers:{'apikey':SUPABASE_ANON,'Authorization':'Bearer '+SUPABASE_ANON,'Content-Type':'application/json'},
+      body: JSON.stringify({payload:{payment_method:paymentMethod, items}})
+    });
+    result = await r.json();
+  }catch(e){ result = {success:false, error:'NETWORK'}; }
+  btn.disabled=false; btn.textContent='Bayar Sekarang';
+  if(!result || result.success===false){
+    const msg = result && result.error ? {INSUFFICIENT_STOCK:'Stock tidak cukup',PRODUCT_NOT_FOUND:'Produk tidak ditemukan',PRODUCT_INACTIVE:'Produk nonaktif',PAYMENT_METHOD_REQUIRED:'Pilih metode bayar',EMPTY_CART:'Keranjang kosong',NETWORK:'Gagal terhubung ke server'}[result.error]||result.error : 'Gagal memproses';
+    return toast(msg, true);
+  }
   const total = Object.values(cart).reduce((s,it)=>s+it.qty*it.price,0);
-  showReceipt(total);
+  showReceipt(result, total);
   cart={}; renderCart();
-  toast('Transaksi berhasil ✓');
+  toast('Transaksi berhasil ✓ Invoice '+result.invoice_no);
+  loadProducts(); // refresh stock
 });
 document.querySelectorAll('.pmt input').forEach(i=>i.addEventListener('change',e=>paymentMethod=e.target.value));
 document.addEventListener('click',e=>{ if(e.target.classList.contains('modal-bg')) closeReceipt(); });
 
-function showReceipt(total){
+function showReceipt(res, total){
   document.getElementById('modalBg').classList.add('show');
   document.getElementById('receiptModal').innerHTML = `
     <h3>🌶️ Kasir Seblak</h3>
-    <div class="sub">Struk • ${new Date().toLocaleString('id-ID')}</div>
+    <div class="sub">Invoice ${res.invoice_no||'-'} • Antrean #${res.queue_no||'-'}</div>
     ${Object.values(cart).map(it=>`<div class="item"><span>${it.qty}x ${it.name}</span><span>${fmt(it.qty*it.price)}</span></div>`).join('')}
     <div class="line"></div>
     <div class="l"><span>Subtotal</span><span>${fmt(total)}</span></div>
