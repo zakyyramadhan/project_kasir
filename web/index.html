@@ -84,6 +84,14 @@
   .pmt label{flex:1;text-align:center;padding:9px;border:1px solid var(--line);border-radius:10px;font-size:12px;color:var(--muted);cursor:pointer;background:var(--panel2)}
   .pmt input{display:none}
   .pmt input:checked+label{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+  .pay-row{display:flex;flex-direction:column;gap:8px}
+  .pay-row label{font-size:12px;color:var(--muted);font-weight:600}
+  .pay-input{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+  .pay-input span{color:var(--muted);font-weight:600}
+  .pay-input input{flex:1;background:none;border:none;outline:none;color:var(--txt);font-size:16px;font-weight:700}
+  .pay-input input::placeholder{color:var(--muted);font-weight:400}
+  .change-row{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+  .change-row b{font-size:16px;color:var(--green);font-weight:800}
   #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);opacity:0;background:#3a2a18;border:1px solid var(--accent2);color:#fff;padding:13px 20px;border-radius:12px;font-size:14px;transition:.3s;z-index:99;box-shadow:var(--shadow)}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   #toast.err{border-color:var(--hot)}
@@ -141,6 +149,14 @@
         <input type="radio" name="pmt" id="pmCash" value="Cash" checked><label for="pmCash">💵 Cash</label>
         <input type="radio" name="pmt" id="pmQR" value="QRIS"><label for="pmQR">📱 QRIS</label>
         <input type="radio" name="pmt" id="pmCards" value="Debit"><label for="pmCards">💳 Debit</label>
+      </div>
+      <div class="pay-row" id="payRow" style="display:none">
+        <label>Uang Dibayar</label>
+        <div class="pay-input">
+          <span>Rp</span>
+          <input id="paidInput" type="number" min="0" placeholder="0" inputmode="numeric">
+        </div>
+        <div class="change-row"><span>Kembalian</span><b id="changeVal">Rp 0</b></div>
       </div>
       <button class="pay" id="payBtn" disabled>Bayar Sekarang</button>
     </div>
@@ -315,9 +331,34 @@ function clock(){document.getElementById('clock').textContent=new Date().toLocal
 setInterval(clock,1000);clock();
 
 document.getElementById('q').addEventListener('input',renderGrid);
+/* ------- cash paid + change ------- */
+function currentTotal(){ return Object.values(cart).reduce((s,it)=>s+it.qty*it.price,0); }
+function togglePayInput(){
+  const isCash = paymentMethod==='Cash';
+  document.getElementById('payRow').style.display = isCash ? 'flex' : 'none';
+  if(isCash) updateChange();
+}
+function updateChange(){
+  const paid = +document.getElementById('paidInput').value || 0;
+  const change = paid - currentTotal();
+  const el=document.getElementById('changeVal');
+  el.textContent = 'Rp ' + fmt(change).replace('Rp ','');
+  el.style.color = change<0 ? 'var(--hot)' : 'var(--green)';
+}
+function cashValid(){
+  const paid = +document.getElementById('paidInput').value || 0;
+  return paid >= currentTotal();
+}
+document.getElementById('paidInput').addEventListener('input',updateChange);
+
 document.getElementById('payBtn').addEventListener('click', async ()=>{
   const items = Object.values(cart).map(it=>({product_id:it.id, qty:it.qty}));
   if(!items.length) return;
+  if(paymentMethod==='Cash'){
+    const paid = +document.getElementById('paidInput').value || 0;
+    const total = currentTotal();
+    if(paid < total) return toast('Uang dibayar kurang (kurang '+fmt(total-paid)+')', true);
+  }
   const btn=document.getElementById('payBtn');
   btn.disabled=true; btn.textContent='Memproses…';
   let result;
@@ -334,16 +375,18 @@ document.getElementById('payBtn').addEventListener('click', async ()=>{
     const msg = result && result.error ? {INSUFFICIENT_STOCK:'Stock tidak cukup',PRODUCT_NOT_FOUND:'Produk tidak ditemukan',PRODUCT_INACTIVE:'Produk nonaktif',PAYMENT_METHOD_REQUIRED:'Pilih metode bayar',EMPTY_CART:'Keranjang kosong',NETWORK:'Gagal terhubung ke server'}[result.error]||result.error : 'Gagal memproses';
     return toast(msg, true);
   }
-  const total = Object.values(cart).reduce((s,it)=>s+it.qty*it.price,0);
-  showReceipt(result, total);
+  const total = currentTotal();
+  const paid = paymentMethod==='Cash' ? (+document.getElementById('paidInput').value||0) : total;
+  showReceipt(result, total, paid, paid-total);
   cart={}; renderCart();
+  document.getElementById('paidInput').value=''; updateChange();
   toast('Transaksi berhasil ✓ Invoice '+result.invoice_no);
   loadProducts(); // refresh stock
 });
-document.querySelectorAll('.pmt input').forEach(i=>i.addEventListener('change',e=>paymentMethod=e.target.value));
+document.querySelectorAll('.pmt input').forEach(i=>i.addEventListener('change',e=>{paymentMethod=e.target.value;togglePayInput();}));
 document.addEventListener('click',e=>{ if(e.target.classList.contains('modal-bg')) closeReceipt(); });
 
-function showReceipt(res, total){
+function showReceipt(res, total, paid, change){
   document.getElementById('modalBg').classList.add('show');
   document.getElementById('receiptModal').innerHTML = `
     <h3>🌶️ Kasir Seblak</h3>
@@ -352,6 +395,8 @@ function showReceipt(res, total){
     <div class="line"></div>
     <div class="l"><span>Subtotal</span><span>${fmt(total)}</span></div>
     <div class="l"><span>Metode</span><span>${paymentMethod}</span></div>
+    ${paymentMethod==='Cash'?`<div class="l"><span>Dibayar</span><span>${fmt(paid)}</span></div>
+    <div class="l"><span>Kembalian</span><span>${fmt(change)}</span></div>`:''}
     <div class="grand"><span>Total</span><span>${fmt(total)}</span></div>
     <button class="btn" onclick="closeReceipt()">Selesai</button>`;
 }
