@@ -1,25 +1,37 @@
 # CURRENT STATE
-Version: v0.3.0.3 (DB) / v0.3.0.2-ui+ (Web)
+Version: v0.3.0.8 (DB) / v0.3.0.2-ui+ (Web)
 
 ## Database
 - [x] Schema: products, sales, sale_items, queue_counters
 - [x] Queue Engine (fn_next_queue, UPSERT, daily reset)
 - [x] Invoice Generator (fn_generate_invoice -> YYYYMMDD-###)
-- [x] Sales Finalization
-- [x] create_sale() skeleton + request validation (payment, empty cart, qty)
-- [x] v0.3.0.3 Product Validation: PRODUCT_NOT_FOUND / PRODUCT_INACTIVE / INVALID_QTY / INVALID_PRODUCT_ID + load sale_price & stock
-- [x] products.emoji column added (for web UI thumbnails)
-- [x] RLS on products: anon read-only, authenticated CRUD (admin)
-- [ ] v0.3.0.4 Stock Validation (qty <= stock, INSUFFICIENT_STOCK)
-- [ ] v0.3.0.5 Queue + Invoice inside create_sale()
-- [ ] v0.3.0.6 Insert Sales header
-- [ ] v0.3.0.7 Insert Sale Items
-- [ ] v0.3.0.8 Update Stock / finalize
+- [x] create_sale full pipeline (v0.3.0.8):
+  - [x] request validation (payment method, empty cart, qty)
+  - [x] product validation (PRODUCT_NOT_FOUND / PRODUCT_INACTIVE)
+  - [x] stock validation (INSUFFICIENT_STOCK, stock never minus)
+  - [x] queue + invoice generation inside create_sale
+  - [x] insert sales header + sale_items
+  - [x] decrement stock atomically (single transaction)
+- [x] products.emoji column
+- [x] RLS: products anon read / authenticated CRUD; sales+sale_items authenticated read only (anon -> [])
 
 ## Web (branch: frontend/web-prototype)
-- [x] index.html — kasir UI (product grid, cart, payment, receipt) white theme, live Supabase + demo fallback
-- [x] admin.html — Supabase Auth login + product CRUD (white theme, centered, emoji dropdown)
-- [x] Gear icon on kasir, shown ONLY to admin user (auth-gated)
+- [x] index.html — kasir UI (white theme)
+  - [x] product grid (live Supabase + demo fallback)
+  - [x] cart with qty controls
+  - [x] payment methods (Cash/QRIS/Debit)
+  - [x] cash: Uang Dibayar input + live Kembalian calc + validation (paid >= total)
+  - [x] Pay -> create_sale RPC (real invoice, queue, stock decrement)
+  - [x] receipt shows Dibayar + Kembalian (cash)
+  - [x] gear icon to admin, shown only to admin user (auth-gated)
+- [x] admin.html — admin dashboard (white theme, centered)
+  - [x] Supabase Auth login
+  - [x] product CRUD with emoji dropdown
+  - [x] tabs: Produk | Riwayat Penjualan
+  - [x] sales history + daily report (date filter, revenue, items, profit)
+  - [ ] Tambah User (needs Edge Function — auth.admin_create_user removed on PG 17.6)
 - [x] Auth user: zakyyramadhan@gmail.com (owner/admin)
-- [ ] Tambah User from admin (needs Edge Function — auth.admin_create_user removed on PG17.6)
-- [ ] Wire "Bayar" to create_sale() RPC (once v0.3.0.5+ lands)
+
+## Open / blocked
+- [ ] Tambah User from admin — Edge Function required (service_role must stay server-side)
+- [ ] Flutter port (after design approval)

@@ -1,19 +1,25 @@
 # NEXT TASK
 
-## v0.3.0.4 — Stock Validation (create_sale)
-1. Compare requested qty vs product.stock (loaded in v0.3.0.3)
-2. Return INSUFFICIENT_STOCK if qty > stock
-3. Stock tidak boleh minus (business rule)
+## Short-term (web, high value)
+1. Low-stock alert — red badge list on admin (stock <= 5), maybe on kasir too
+2. Cancel/Void sale (admin) — refund flow; sales.status already supports VOID/REFUND
+3. Tambah User via Edge Function (owner-gated) — service_role server-side, caller must be admin id 4f3040fd-d930-4e84-b578-e798dcf68a7a, then call POST /auth/v1/admin/users
 
-## v0.3.0.5 — Queue + Invoice
-1. Call fn_next_queue() -> queue_no
-2. Call fn_generate_invoice(sale_date, queue_no) -> invoice_no
-3. Stamp on the sale
+## Medium-term
+4. Customer queue display screen (fn_next_queue already built for this)
+5. Print receipt (58mm thermal)
+6. Daily summary email / export CSV
+7. Cashier shift/session login (ties into add-user feature)
 
-## v0.3.0.6-8 — Finalization
-- Insert sales header + sale_items, then decrement stock atomically
+## DB roadmap (create_sale) — DONE at v0.3.0.8
+- v0.3.0.1 Skeleton
+- v0.3.0.2 Request Validation
+- v0.3.0.3 Product Validation
+- v0.3.0.4 Stock Validation
+- v0.3.0.5 Queue + Invoice
+- v0.3.0.6 Insert Sales
+- v0.3.0.7 Insert Sale Items
+- v0.3.0.8 Update Stock (atomic pipeline complete)
 
-## Web — Tambah User (owner-gated)
-- auth.admin_create_user() does NOT exist on this Supabase (PG 17.6)
-- Fix: Supabase Edge Function (Deno) holding service_role; validate caller == admin id 4f3040fd-d930-4e84-b578-e798dcf68a7a; call POST /auth/v1/admin/users
-- Then wire admin.html "👥 Tambah User" to the edge function
+## Flutter
+- Port approved web design to Flutter + supabase_flutter (blocked until web design approved)
